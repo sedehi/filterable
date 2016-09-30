@@ -1,0 +1,29 @@
+{
+    "name": "sedehi/filterable",
+    "description": "",
+    "keywords": [
+        "laravel",
+        "filterable",
+        "eloquent",
+        "eloquent search",
+        "eloquent filter"
+    ],
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Navid Sedehi",
+            "email": "navid.sedehi@gmail.com",
+            "homepage": "http://sedehi.ir"
+        }
+    ],
+    "require": {
+        "php": ">=5.4.0",
+        "illuminate/support": "~5"
+    },
+    "autoload": {
+        "psr-4": {
+            "Sedehi\\Filterable": "src/"
+        }
+    },
+    "minimum-stability": "stable"
+}
