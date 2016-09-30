@@ -22,7 +22,7 @@
     },
     "autoload": {
         "psr-4": {
-            "Sedehi\\Filterable": "src/"
+            "Sedehi\\Filterable\\": "src/"
         }
     },
     "minimum-stability": "stable"
