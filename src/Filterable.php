@@ -70,9 +70,9 @@ trait Filterable
 
         $mktimeFunction = $this->mktime();
         $dateTime       = [];
-        $dateTime[3]    = 0;
-        $dateTime[4]    = 0;
-        $dateTime[5]    = 0;
+        $dateTime[3]    = '0';
+        $dateTime[4]    = '0';
+        $dateTime[5]    = '0';
         $dateTime       = array_merge(explode(config('filterable.date_divider'), $date), $dateTime);
         $formats        = ['d' => 0, 'm' => 1, 'y' => 2, 'h' => 3, 'i' => 4, 's' => 5];
 
