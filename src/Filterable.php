@@ -137,7 +137,7 @@ trait Filterable
     {
         $dates = array_unique(array_merge(config('filterable.date_fields'), $this->dates));
 
-        $betweenValue = '';
+        $betweenValue = [];
         if (is_array($value['between'])) {
             $this->clause = 'whereBetween';
             $this->column = $key;
