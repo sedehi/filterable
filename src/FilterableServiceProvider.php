@@ -6,6 +6,9 @@ use Illuminate\Support\ServiceProvider;
 
 class FilterableServiceProvider extends ServiceProvider
 {
+
+    protected $defer = true;
+
     /**
      * Bootstrap the application services.
      *
