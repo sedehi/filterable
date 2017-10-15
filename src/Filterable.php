@@ -129,7 +129,7 @@ trait Filterable
             $this->clause = 'whereBetween';
             $this->column = $key;
             foreach($value['between'] as $vBetween) {
-                if(request()->has($vBetween)) {
+                if(request()->has($vBetween) && !is_null(request($vBetween))) {
                     if(in_array($key, $dates)) {
                         $betweenValue[] = $this->convertDate(request()->get($vBetween));
                     }else {
