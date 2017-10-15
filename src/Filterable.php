@@ -9,7 +9,6 @@
 
 namespace Sedehi\Filterable;
 
-
 trait Filterable
 {
 
@@ -19,30 +18,24 @@ trait Filterable
     private $column;
     private $value;
 
-    public function scopeFilter($query, array $filter = null)
-    {
+    public function scopeFilter($query, array $filter = null){
 
-
-        if (!is_null($filter)) {
+        if(!is_null($filter)) {
             $this->filterable = $filter;
         }
+        if(count(request()->except('page'))) {
 
-        if (count(request()->except('page'))) {
-
-            foreach ($this->filterable as $key => $value) {
-
-                if (is_numeric($key) && request()->has($value)) {
+            foreach($this->filterable as $key => $value) {
+                if(is_numeric($key) && (request()->has($value) && !is_null(request($value)))) {
                     $this->clauseEqual($query, $value);
-                } elseif (is_array($value)) {
-                    if (isset($value['operator']) && request()->has($key)) {
+                }elseif(is_array($value)) {
+                    if(isset($value['operator']) && (request()->has($key) && !is_null(request($key)))) {
                         $this->clauseOperator($query, $key, $value);
                     }
-
-                    if (isset($value['scope']) && request()->has($key)) {
+                    if(isset($value['scope']) && (request()->has($key) && !is_null(request($key)))) {
                         $this->clauseScope($query, $value);
                     }
-
-                    if (isset($value['between'])) {
+                    if(isset($value['between'])) {
 
                         $this->clauseBetween($query, $key, $value);
                     }
@@ -51,13 +44,12 @@ trait Filterable
         }
     }
 
+    private function mktime(){
 
-    private function mktime()
-    {
-        if (config('filterable.date_type') === 'gregorian') {
+        if(config('filterable.date_type') === 'gregorian') {
             return 'mktime';
-        } else {
-            if (!function_exists('jmktime')) {
+        }else {
+            if(!function_exists('jmktime')) {
                 throw new \Exception('jmktime functions are unavailable');
             }
 
@@ -65,8 +57,7 @@ trait Filterable
         }
     }
 
-    private function convertDate($date)
-    {
+    private function convertDate($date){
 
         $mktimeFunction = $this->mktime();
         $dateTime       = [];
@@ -75,77 +66,73 @@ trait Filterable
         $dateTime[5]    = '0';
         $dateTime       = array_merge(explode(config('filterable.date_divider'), $date), $dateTime);
         $formats        = ['d' => 0, 'm' => 1, 'y' => 2, 'h' => 3, 'i' => 4, 's' => 5];
-
-        if (count($dateTime) == 6) {
-            if (!is_null(config('filterable.date_format'))) {
+        if(count($dateTime) == 6) {
+            if(!is_null(config('filterable.date_format'))) {
                 $formats = array_flip(explode(config('filterable.date_divider'), config('filterable.date_format')));
             }
-            $timestamp = $mktimeFunction($dateTime[$formats['h']], $dateTime[$formats['i']], $dateTime[$formats['s']],
-                                         $dateTime[$formats['m']], $dateTime[$formats['d']], $dateTime[$formats['y']]);
+            $timestamp = $mktimeFunction($dateTime[$formats['h']], $dateTime[$formats['i']], $dateTime[$formats['s']], $dateTime[$formats['m']], $dateTime[$formats['d']], $dateTime[$formats['y']]);
 
             return date($this->getDateFormat(), $timestamp);
         }
 
-
         return false;
     }
 
-    private function clause($query)
-    {
-        switch ($this->clause) {
+    private function clause($query){
+
+        switch($this->clause) {
             case 'where':
                 $query->{$this->clause}($this->column, $this->operator, $this->value);
                 break;
             case 'whereBetween':
-                if (count($this->value) == 2) {
+                if(count($this->value) == 2) {
                     $query->{$this->clause}($this->column, $this->value);
                 }
                 break;
         }
     }
 
-    private function clauseEqual($query, $value)
-    {
+    private function clauseEqual($query, $value){
+
         $this->column = $value;
         $this->value  = request()->get($value);
         $this->clause($query);
     }
 
-    private function clauseOperator($query, $key, $value)
-    {
+    private function clauseOperator($query, $key, $value){
+
         $this->column   = $key;
         $this->value    = request()->get($key);
         $this->operator = strtoupper($value['operator']);
-        if ($this->operator === 'LIKE') {
+        if($this->operator === 'LIKE') {
             $this->value = '%'.$this->value.'%';
         }
         $this->clause($query);
     }
 
-    private function clauseScope($query, $value)
-    {
-        if (is_array($value['scope'])) {
-            foreach ($value['scope'] as $scope) {
+    private function clauseScope($query, $value){
+
+        if(is_array($value['scope'])) {
+            foreach($value['scope'] as $scope) {
                 $query->{$scope}();
             }
-        } else {
+        }else {
             $query->{$value['scope']}();
         }
     }
 
-    private function clauseBetween($query, $key, $value)
-    {
-        $dates = array_unique(array_merge(config('filterable.date_fields'), $this->dates));
+    private function clauseBetween($query, $key, $value){
 
+        $dates        = array_unique(array_merge(config('filterable.date_fields'), $this->dates));
         $betweenValue = [];
-        if (is_array($value['between'])) {
+        if(is_array($value['between'])) {
             $this->clause = 'whereBetween';
             $this->column = $key;
-            foreach ($value['between'] as $vBetween) {
-                if (request()->has($vBetween)) {
-                    if (in_array($key, $dates)) {
+            foreach($value['between'] as $vBetween) {
+                if(request()->has($vBetween)) {
+                    if(in_array($key, $dates)) {
                         $betweenValue[] = $this->convertDate(request()->get($vBetween));
-                    } else {
+                    }else {
                         $betweenValue[] = request()->get($vBetween);
                     }
                 }
