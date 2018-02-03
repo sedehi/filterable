@@ -57,13 +57,13 @@ trait Filterable
         }
     }
 
-    private function convertDate($date){
+    private function convertDate($date, $last = false){
 
         $mktimeFunction = $this->mktime();
         $dateTime       = [];
-        $dateTime[3]    = '0';
-        $dateTime[4]    = '0';
-        $dateTime[5]    = '0';
+        $dateTime[3]    = ($last) ? '23' : '0';
+        $dateTime[4]    = ($last) ? '59' : '0';
+        $dateTime[5]    = ($last) ? '59' : '0';
         $dateTime       = array_merge(explode(config('filterable.date_divider'), $date), $dateTime);
         $formats        = ['d' => 0, 'm' => 1, 'y' => 2, 'h' => 3, 'i' => 4, 's' => 5];
         if(count($dateTime) == 6) {
@@ -131,7 +131,7 @@ trait Filterable
             foreach($value['between'] as $vBetween) {
                 if(request()->has($vBetween) && !is_null(request($vBetween))) {
                     if(in_array($key, $dates)) {
-                        $betweenValue[] = $this->convertDate(request()->get($vBetween));
+                        $betweenValue[] = $this->convertDate(request()->get($vBetween), (last($value['between']) == $vBetween) ? true : false);
                     }else {
                         $betweenValue[] = request()->get($vBetween);
                     }
