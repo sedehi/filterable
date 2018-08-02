@@ -11,7 +11,7 @@ namespace Sedehi\Filterable;
 
 trait Filterable
 {
-    
+
     private $operator = '=';
     private $clause   = 'where';
     private $append   = false;
@@ -33,7 +33,7 @@ trait Filterable
                     }
                 }
             }
-            
+
             foreach($this->filterable as $key => $value) {
                 if(is_numeric($key) && (request()->has($value) && !is_null(request($value)))) {
                     $this->clauseEqual($query, $value);
@@ -52,17 +52,15 @@ trait Filterable
         }
     }
 
-    private function mktime(){
-
+    private function mktime()
+    {
         if(config('filterable.date_type') === 'gregorian') {
             return 'mktime';
-        }else {
-            if(!function_exists('jmktime')) {
-                throw new \Exception('jmktime functions are unavailable');
-            }
-
-            return 'jmktime';
         }
+        if(config('filterable.date_type') === 'jalali' && !function_exists('jmktime')) {
+            throw new \Exception('jmktime functions are unavailable');
+        }
+        return 'jmktime';
     }
 
     private function convertDate($date, $last = false){
@@ -87,7 +85,6 @@ trait Filterable
     }
 
     private function clause($query){
-
         switch($this->clause) {
             case 'where':
                 $query->{$this->clause}($this->column, $this->operator, $this->value);
@@ -136,18 +133,40 @@ trait Filterable
         if(is_array($value['between'])) {
             $this->clause = 'whereBetween';
             $this->column = $key;
-            foreach($value['between'] as $vBetween) {
-                if(request()->has($vBetween) && !is_null(request($vBetween))) {
-                    if(in_array($key, $dates)) {
-                        $betweenValue[] = $this->convertDate(request()->get($vBetween), (last($value['between']) == $vBetween) ? true : false);
-                    }else {
-                        $betweenValue[] = request()->get($vBetween);
-                    }
+            if ((request()->has($value['between'][0]) && !is_null(request($value['between'][0]))) &&
+                (request()->has($value['between'][1]) && !is_null(request($value['between'][1])))) {
+                if(in_array($key, $dates)) {
+                    $betweenValue[] = $this->convertDate(request($value['between'][0]));
+                    $betweenValue[] = $this->convertDate(request($value['between'][1]),true);
+                } else {
+                    $betweenValue[] = request($value['between'][0]);
+                    $betweenValue[] = request($value['between'][1]);
+                }
+                $this->value = $betweenValue;
+            } elseif (
+                (request()->has($value['between'][0]) && !is_null(request($value['between'][0]))) &&
+                (!request()->has($value['between'][1]) || is_null(request($value['between'][1])))
+            ) {
+                $this->clause = 'where';
+                $this->operator = '>=';
+                if(in_array($key, $dates)) {
+                    $this->value = $this->convertDate(request($value['between'][0]));
+                } else {
+                    $this->value = request($value['between'][0]);
+                }
+            } elseif (
+                (!request()->has($value['between'][0]) || is_null(request($value['between'][0]))) &&
+                (request()->has($value['between'][1]) && !is_null(request($value['between'][1])))
+            ) {
+                $this->clause = 'where';
+                $this->operator = '<=';
+                if(in_array($key, $dates)) {
+                    $this->value = $this->convertDate(request($value['between'][1]),true);
+                } else {
+                    $this->value = request($value['between'][1]);
                 }
             }
-            $this->value = $betweenValue;
             $this->clause($query);
         }
     }
-
 }
