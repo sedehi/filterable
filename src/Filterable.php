@@ -11,7 +11,7 @@ namespace Sedehi\Filterable;
 
 trait Filterable
 {
-
+    
     private $operator = '=';
     private $clause   = 'where';
     private $append   = false;
@@ -25,6 +25,15 @@ trait Filterable
         }
         if(count(request()->except('page'))) {
 
+            // check for trashed flag in request and if exists update the query
+            if (request()->has('trashed') && !is_null(request('trashed'))) {
+                if (in_array('Illuminate\Database\Eloquent\SoftDeletes',class_uses($this))) {
+                    if (in_array(request('trashed'),['with','only'])) {
+                        $query->{request('trashed').'Trashed'}();
+                    }
+                }
+            }
+            
             foreach($this->filterable as $key => $value) {
                 if(is_numeric($key) && (request()->has($value) && !is_null(request($value)))) {
                     $this->clauseEqual($query, $value);
@@ -36,7 +45,6 @@ trait Filterable
                         $this->clauseScope($query, $value);
                     }
                     if(isset($value['between'])) {
-
                         $this->clauseBetween($query, $key, $value);
                     }
                 }
