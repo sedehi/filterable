@@ -128,25 +128,64 @@ trait Filterable
         }
     }
 
-    private function clauseBetween($query, $key, $value){
-
-        $dates        = array_unique(array_merge(config('filterable.date_fields'), $this->dates));
-        $betweenValue = [];
+    private function clauseBetween($query, $key, $value)
+    {
         if(is_array($value['between'])) {
             $this->clause = 'whereBetween';
             $this->column = $key;
-            foreach($value['between'] as $vBetween) {
-                if(request()->has($vBetween) && !is_null(request($vBetween))) {
-                    if(in_array($key, $dates)) {
-                        $betweenValue[] = $this->convertDate(request()->get($vBetween), (last($value['between']) == $vBetween) ? true : false);
-                    }else {
-                        $betweenValue[] = request()->get($vBetween);
-                    }
-                }
+            if ((request()->has($value['between'][0]) && !is_null(request($value['between'][0]))) &&
+                (request()->has($value['between'][1]) && !is_null(request($value['between'][1])))) {
+                $this->setPropertiesByType('both', $key, $value);
+            } elseif (
+                (request()->has($value['between'][0]) && !is_null(request($value['between'][0]))) &&
+                (!request()->has($value['between'][1]) || is_null(request($value['between'][1])))
+            ) {
+                $this->setPropertiesByType('first', $key, $value);
+            } elseif (
+                (!request()->has($value['between'][0]) || is_null(request($value['between'][0]))) &&
+                (request()->has($value['between'][1]) && !is_null(request($value['between'][1])))
+            ) {
+                $this->setPropertiesByType('second', $key, $value);
             }
-            $this->value = $betweenValue;
             $this->clause($query);
         }
     }
 
+    private function setPropertiesByType($type, $key, $value)
+    {
+        $dates  = array_unique(array_merge(config('filterable.date_fields'), $this->dates));
+        switch ($type) {
+            case 'both':
+                if(in_array($key, $dates)) {
+                    $this->value = [
+                        $this->convertDate(request($value['between'][0])),
+                        $this->convertDate(request($value['between'][1]),true)
+                    ];
+                } else {
+                    $this->value = [
+                        request($value['between'][0]),
+                        request($value['between'][1])
+                    ];
+                }
+                break;
+            case 'first':
+                $this->clause = 'where';
+                $this->operator = '>=';
+                if(in_array($key, $dates)) {
+                    $this->value = $this->convertDate(request($value['between'][0]));
+                } else {
+                    $this->value = request($value['between'][0]);
+                }
+                break;
+            case 'second':
+                $this->clause = 'where';
+                $this->operator = '<=';
+                if(in_array($key, $dates)) {
+                    $this->value = $this->convertDate(request($value['between'][1]),true);
+                } else {
+                    $this->value = request($value['between'][1]);
+                }
+                break;
+        }
+    }
 }
