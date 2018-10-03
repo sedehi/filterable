@@ -104,6 +104,7 @@ trait Filterable
 
         $this->column = $value;
         $this->value  = request()->get($value);
+        $this->operator = '=';
         $this->clause($query);
     }
 
