@@ -104,8 +104,9 @@ trait Filterable
 
         $this->column = $value;
         $this->value  = request()->get($value);
-        $this->operator = '=';
         $this->clause($query);
+        $this->operator = '=';
+
     }
 
     private function clauseOperator($query, $key, $value){
