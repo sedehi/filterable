@@ -52,17 +52,15 @@ trait Filterable
         }
     }
 
-    private function mktime(){
-
+    private function mktime()
+    {
         if(config('filterable.date_type') === 'gregorian') {
             return 'mktime';
-        }else {
-            if(!function_exists('jmktime')) {
-                throw new \Exception('jmktime functions are unavailable');
-            }
-
-            return 'jmktime';
         }
+        if(!function_exists('jmktime')) {
+            throw new \Exception('jmktime functions are unavailable');
+        }
+        return 'jmktime';
     }
 
     private function convertDate($date, $last = false){
