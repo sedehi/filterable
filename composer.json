@@ -25,5 +25,12 @@
             "Sedehi\\Filterable\\": "src/"
         }
     },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Sedehi\\Filterable\\FilterableServiceProvider"
+            ]
+        }
+    },
     "minimum-stability": "stable"
 }
