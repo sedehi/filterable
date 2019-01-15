@@ -91,7 +91,7 @@ trait Filterable
                 $query->{$this->clause}($this->column, $this->operator, $this->value);
                 break;
             case 'whereBetween':
-                if(count($this->value) == 2) {
+                if(count((array)$this->value) == 2) {
                     $query->{$this->clause}($this->column, $this->value);
                 }
                 break;
