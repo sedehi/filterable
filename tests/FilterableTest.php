@@ -6,7 +6,6 @@ use Carbon\Carbon;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 use Sedehi\Filterable\Test\Models\TestItems;
-use Tests\TestCase;
 
 class FilterableTest extends TestCase
 {
@@ -14,8 +13,8 @@ class FilterableTest extends TestCase
     public function setUp() : void{
 
         parent::setUp();
-        config(['database.default' => 'sqlite']);
-        config(['database.connections.sqlite.database' => ':memory:']);
+        config()->set('database.default', 'sqlite');
+        config()->set('database.connections.sqlite.database', ':memory:');
         Schema::create('items', function(Blueprint $table){
 
             $table->increments('id');
@@ -124,7 +123,7 @@ class FilterableTest extends TestCase
      */
     public function can_search_gregorian_datetime(){
 
-        config(['filterable.date_type' => 'gregorian']);
+        config()->set('filterable.date_type', 'gregorian');
         request()->replace([
                                'start_created' => '2018-12-23',
                                'end_created'   => '2018-12-24',
@@ -139,7 +138,7 @@ class FilterableTest extends TestCase
      */
     public function can_search_jalali_datetime(){
 
-        config(['filterable.date_type' => 'jalali']);
+        config()->set('filterable.date_type', 'jalali');
         request()->replace([
                                'start_created' => '1369-10-02',
                                'end_created'   => '1369-10-02',
