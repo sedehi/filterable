@@ -6,6 +6,7 @@ use Carbon\Carbon;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 use Sedehi\Filterable\Test\Models\TestItems;
+use Tests\TestCase;
 
 class FilterableTest extends TestCase
 {
