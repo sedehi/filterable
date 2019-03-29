@@ -6,7 +6,6 @@ use Carbon\Carbon;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 use Sedehi\Filterable\Test\Models\TestItems;
-use Tests\TestCase;
 
 class FilterableTest extends TestCase
 {
@@ -14,8 +13,6 @@ class FilterableTest extends TestCase
     public function setUp() : void{
 
         parent::setUp();
-        config()->set('database.default', 'sqlite');
-        config()->set('database.connections.sqlite.database', ':memory:');
         Schema::create('items', function(Blueprint $table){
 
             $table->increments('id');
@@ -146,4 +143,5 @@ class FilterableTest extends TestCase
                            ]);
         $this->assertCount(1, TestItems::filter()->get());
     }
+
 }

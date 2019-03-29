@@ -1,10 +1,10 @@
-# Laravel Filterable [![Latest Stable Version](https://poser.pugx.org/sedehi/filterable/v/stable)](https://packagist.org/packages/sedehi/filterable) [![Total Downloads](https://poser.pugx.org/sedehi/filterable/downloads)](https://packagist.org/packages/sedehi/filterable)
+# Laravel Filterable [![Latest Stable Version](https://poser.pugx.org/sedehi/filterable/v/stable)](https://packagist.org/packages/sedehi/filterable) [![Total Downloads](https://poser.pugx.org/sedehi/filterable/downloads)](https://packagist.org/packages/sedehi/filterable) [![Build Status](https://travis-ci.com/sedehi/travis-test.svg?branch=master)](https://travis-ci.com/sedehi/travis-test)
 
 
 ## Installation
 
 To get the latest version, simply require the project using [Composer](https://getcomposer.org):
-
+	
 ```php
 composer require sedehi/filterable
 ```
