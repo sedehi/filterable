@@ -1,4 +1,4 @@
-# Laravel Filterable [![Latest Stable Version](https://poser.pugx.org/sedehi/filterable/v/stable)](https://packagist.org/packages/sedehi/filterable) [![Total Downloads](https://poser.pugx.org/sedehi/filterable/downloads)](https://packagist.org/packages/sedehi/filterable) 
+# Laravel Filterable [![Latest Stable Version](https://poser.pugx.org/sedehi/filterable/v/stable)](https://packagist.org/packages/sedehi/filterable) [![Total Downloads](https://poser.pugx.org/sedehi/filterable/downloads)](https://packagist.org/packages/sedehi/filterable) [![Build Status](https://travis-ci.com/sedehi/filterable.svg?branch=master)](https://travis-ci.com/sedehi/filterable)
 
 
 ## Installation
