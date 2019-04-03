@@ -39,6 +39,8 @@ class FilterableTest extends TestCase
                                ]);
     }
 
+
+
     /**
      * @test
      * @return void
@@ -140,6 +142,21 @@ class FilterableTest extends TestCase
         request()->replace([
                                'start_created' => '1369-10-02',
                                'end_created'   => '1369-10-02',
+                           ]);
+        $this->assertCount(1, TestItems::filter()->get());
+    }
+
+
+    /**
+     * @test
+     * @return void
+     */
+    public function can_search_with_persian_number_filterable(){
+
+        config()->set('filterable.date_type', 'jalali');
+        request()->replace([
+                               'start_created' => '۱۳۶۹-۱۰-۰۲',
+                               'end_created'   => '۱۳۶۹-۱۰-۰۲',
                            ]);
         $this->assertCount(1, TestItems::filter()->get());
     }

@@ -3,6 +3,7 @@
 namespace Sedehi\Filterable;
 
 use Carbon\Carbon;
+use Morilog\Jalali\CalendarUtils;
 use Morilog\Jalali\Jalalian;
 
 trait Filterable
@@ -52,6 +53,7 @@ trait Filterable
 
     private function convertDate($date, $last = false){
 
+        $date        = CalendarUtils::convertNumbers($date, true);
         $dateTime    = [];
         $dateTime[3] = ($last) ? '23' : '0';
         $dateTime[4] = ($last) ? '59' : '0';
