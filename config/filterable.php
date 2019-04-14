@@ -2,7 +2,7 @@
 return [
 
     //gregorian or jalali
-    'date_type'    => 'jalali',
+    'date_type'    => 'gregorian',
     'date_fields'  => [
         'created_at',
         'updated_at',
