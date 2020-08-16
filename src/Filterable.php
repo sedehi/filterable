@@ -47,6 +47,8 @@ trait Filterable
                         $this->clauseBetween($query, $key, $value);
                     }
                 }
+                $this->column = null;
+                $this->value = null;
             }
         }
     }
