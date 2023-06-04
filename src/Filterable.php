@@ -141,7 +141,11 @@ trait Filterable
 
     private function setPropertiesByType($type, $key, $value){
 
-        $dates = array_unique(array_merge(config('filterable.date_fields'), $this->dates));
+        $casts = collect($this->casts);
+        $dates = $casts->filter(function($value){
+            return $value ==='datetime';
+        })->merge(array_flip($this->getDates() + (array)$this->dates))->keys()->toArray();
+        $dates = array_unique(array_merge(config('filterable.date_fields'), $dates));
         switch($type) {
             case 'both':
                 if(in_array($key, $dates)) {
