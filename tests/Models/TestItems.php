@@ -8,26 +8,28 @@ use Sedehi\Filterable\Filterable;
 
 class TestItems extends Model
 {
-
     use Filterable, SoftDeletes;
-    public $table      = 'items';
+
+    public $table = 'items';
+
     public $filterable = [
         'title',
-        'number'     => [
-            'operator' => '>'
+        'number' => [
+            'operator' => '>',
         ],
-        'custom'     => [
-            'scope' => 'CustomScopeSearch'
+        'custom' => [
+            'scope' => 'CustomScopeSearch',
         ],
         'created_at' => [
             'between' => [
                 'start_created',
-                'end_created'
-            ]
+                'end_created',
+            ],
         ],
     ];
 
-    public function scopeCustomScopeSearch($query){
+    public function scopeCustomScopeSearch($query)
+    {
 
         return $query->whereNotNull('id');
     }

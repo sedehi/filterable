@@ -9,11 +9,11 @@ use Sedehi\Filterable\Test\Models\TestItems;
 
 class FilterableTest extends TestCase
 {
-
-    public function setUp() : void{
+    public function setUp(): void
+    {
 
         parent::setUp();
-        Schema::create('items', function(Blueprint $table){
+        Schema::create('items', function (Blueprint $table) {
 
             $table->increments('id');
             $table->string('title');
@@ -22,143 +22,155 @@ class FilterableTest extends TestCase
             $table->timestamps();
         });
         TestItems::forceCreate([
-                                   'title'      => 'english text',
-                                   'number'     => 876,
-                                   'created_at' => Carbon::create(1990, 12, 23, 10, 30, 00)
-                               ]);
+            'title' => 'english text',
+            'number' => 876,
+            'created_at' => Carbon::create(1990, 12, 23, 10, 30, 00),
+        ]);
         TestItems::forceCreate([
-                                   'title'      => 'english text',
-                                   'number'     => 500,
-                                   'deleted_at' => Carbon::create(2018, 10, 3, 17, 00, 30),
-                                   'created_at' => Carbon::create(2018, 12, 23, 15, 00, 00)
-                               ]);
+            'title' => 'english text',
+            'number' => 500,
+            'deleted_at' => Carbon::create(2018, 10, 3, 17, 00, 30),
+            'created_at' => Carbon::create(2018, 12, 23, 15, 00, 00),
+        ]);
         TestItems::forceCreate([
-                                   'title'      => 'متن فارسی',
-                                   'number'     => 210,
-                                   'created_at' => Carbon::create(2018, 07, 23, 10, 30, 00)
-                               ]);
+            'title' => 'متن فارسی',
+            'number' => 210,
+            'created_at' => Carbon::create(2018, 07, 23, 10, 30, 00),
+        ]);
     }
-
-
 
     /**
      * @test
+     *
      * @return void
      */
-    public function can_search_with_filterable(){
+    public function can_search_with_filterable()
+    {
 
         request()->replace([
-                               'title' => 'navid'
-                           ]);
+            'title' => 'navid',
+        ]);
         $this->assertCount(0, TestItems::filter()->get());
         request()->replace([
-                               'title' => 'english text'
-                           ]);
+            'title' => 'english text',
+        ]);
         $this->assertCount(1, TestItems::filter()->get());
     }
 
     /**
      * @test
+     *
      * @return void
      */
-    public function can_set_operator(){
+    public function can_set_operator()
+    {
 
         $rule = [
-            'title'  => [
-                'operator' => 'LIKE'
+            'title' => [
+                'operator' => 'LIKE',
             ],
             'number' => [
-                'operator' => '>='
-            ]
+                'operator' => '>=',
+            ],
         ];
         request()->replace([
-                               'title' => 'english'
-                           ]);
+            'title' => 'english',
+        ]);
         $this->assertCount(1, TestItems::filter($rule)->get());
         request()->replace([
-                               'number' => '210'
-                           ]);
+            'number' => '210',
+        ]);
         $this->assertCount(2, TestItems::filter($rule)->get());
     }
 
     /**
      * @test
+     *
      * @return void
      */
-    public function can_find_items_with_trashed(){
+    public function can_find_items_with_trashed()
+    {
 
         request()->replace([
-                               'trashed' => 'with'
-                           ]);
+            'trashed' => 'with',
+        ]);
         $this->assertCount(3, TestItems::filter()->get());
     }
 
     /**
      * @test
+     *
      * @return void
      */
-    public function can_find_items_only_trashed(){
+    public function can_find_items_only_trashed()
+    {
 
         request()->replace([
-                               'trashed' => 'only'
-                           ]);
+            'trashed' => 'only',
+        ]);
         $this->assertCount(1, TestItems::filter()->get());
     }
 
     /**
      * @test
+     *
      * @return void
      */
-    public function search_by_scope(){
+    public function search_by_scope()
+    {
 
         request()->replace([
-                               'custom'
-                           ]);
+            'custom',
+        ]);
         $this->assertCount(2, TestItems::filter()->get());
     }
 
     /**
      * @test
+     *
      * @return void
      */
-    public function can_search_gregorian_datetime(){
+    public function can_search_gregorian_datetime()
+    {
 
         config()->set('filterable.date_type', 'gregorian');
         request()->replace([
-                               'start_created' => '2018-12-23',
-                               'end_created'   => '2018-12-24',
-                               'trashed'       => 'with'
-                           ]);
+            'start_created' => '2018-12-23',
+            'end_created' => '2018-12-24',
+            'trashed' => 'with',
+        ]);
         $this->assertCount(1, TestItems::filter()->get());
     }
 
     /**
      * @test
+     *
      * @return void
      */
-    public function can_search_jalali_datetime(){
+    public function can_search_jalali_datetime()
+    {
 
         config()->set('filterable.date_type', 'jalali');
         request()->replace([
-                               'start_created' => '1369-10-02',
-                               'end_created'   => '1369-10-02',
-                           ]);
+            'start_created' => '1369-10-02',
+            'end_created' => '1369-10-02',
+        ]);
         $this->assertCount(1, TestItems::filter()->get());
     }
-
 
     /**
      * @test
+     *
      * @return void
      */
-    public function can_search_with_persian_number_filterable(){
+    public function can_search_with_persian_number_filterable()
+    {
 
         config()->set('filterable.date_type', 'jalali');
         request()->replace([
-                               'start_created' => '۱۳۶۹-۱۰-۰۲',
-                               'end_created'   => '۱۳۶۹-۱۰-۰۲',
-                           ]);
+            'start_created' => '۱۳۶۹-۱۰-۰۲',
+            'end_created' => '۱۳۶۹-۱۰-۰۲',
+        ]);
         $this->assertCount(1, TestItems::filter()->get());
     }
-
 }
