@@ -31,7 +31,7 @@ trait Filterable
         }
         $this->filterableQuery = $query;
         if (count(request()->except('page'))) {
-            $this->applyTrashedFilter($query);
+            $this->applyTrashedFilter();
             foreach ($this->filterable as $key => $value) {
                 if (is_numeric($key) && (request()->has($value) && ! is_null(request($value)))) {
                     $this->applyClauseEqual($value);
@@ -52,12 +52,12 @@ trait Filterable
         }
     }
 
-    private function applyTrashedFilter($query)
+    private function applyTrashedFilter()
     {
         if (request()->has('trashed') && ! is_null(request('trashed'))) {
             if (in_array(SoftDeletes::class, class_uses($this))) {
                 if (in_array(request('trashed'), ['with', 'only'])) {
-                    $query->{request('trashed').'Trashed'}();
+                    $this->filterableQuery->{request('trashed').'Trashed'}();
                 }
             }
         }
