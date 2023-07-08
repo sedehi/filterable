@@ -19,6 +19,8 @@ trait Filterable
 
     private $value;
 
+    private $filterableQuery;
+
     public function scopeFilter($query, array $filter = null)
     {
         if (! is_null($filter)) {
@@ -27,20 +29,21 @@ trait Filterable
         if (is_null($this->filterable)) {
             return $query;
         }
+        $this->filterableQuery = $query;
         if (count(request()->except('page'))) {
             $this->applyTrashedFilter($query);
             foreach ($this->filterable as $key => $value) {
                 if (is_numeric($key) && (request()->has($value) && ! is_null(request($value)))) {
-                    $this->applyClauseEqual($query, $value);
+                    $this->applyClauseEqual($value);
                 } elseif (is_array($value)) {
                     if (isset($value['operator']) && (request()->has($key) && ! is_null(request($key)))) {
-                        $this->applyClauseOperator($query, $key, $value);
+                        $this->applyClauseOperator($key, $value);
                     }
                     if (isset($value['scope']) && (request()->has($key) && ! is_null(request($key)))) {
-                        $this->applyClauseScope($query, $value);
+                        $this->applyClauseScope($value);
                     }
                     if (isset($value['between'])) {
-                        $this->applyClauseBetween($query, $key, $value);
+                        $this->applyClauseBetween($key, $value);
                     }
                 }
                 $this->column = null;
@@ -60,10 +63,10 @@ trait Filterable
         }
     }
 
-    private function applyClauseEqual($query, $value)
+    private function applyClauseEqual($value)
     {
         $scopeClass = $this->scope('where');
-        $query->tap(function ($query) use ($value, $scopeClass) {
+        $this->filterableQuery->tap(function ($query) use ($value, $scopeClass) {
             (new $scopeClass)->apply($query, $query->getModel(), $value, '=', request()->get($value));
         });
     }
@@ -73,10 +76,10 @@ trait Filterable
         return config('filterable.scopes.'.$name);
     }
 
-    private function applyClauseOperator($query, $key, $value)
+    private function applyClauseOperator($key, $value)
     {
         $scopeClass = $this->scope('where');
-        $query->tap(function ($query) use ($value, $key, $scopeClass) {
+        $this->filterableQuery->tap(function ($query) use ($value, $key, $scopeClass) {
             $operator = strtoupper($value['operator']);
             $value = request()->get($key);
             if ($operator === 'LIKE') {
@@ -86,18 +89,18 @@ trait Filterable
         });
     }
 
-    private function applyClauseScope($query, $value)
+    private function applyClauseScope($value)
     {
         if (is_array($value['scope'])) {
             foreach ($value['scope'] as $scope) {
-                $query->{$scope}();
+                $this->filterableQuery->{$scope}();
             }
         } else {
-            $query->{$value['scope']}();
+            $this->filterableQuery->{$value['scope']}();
         }
     }
 
-    private function applyClauseBetween($query, $key, $value)
+    private function applyClauseBetween($key, $value)
     {
         if (is_array($value['between'])) {
             $this->clause = 'whereBetween';
@@ -109,19 +112,19 @@ trait Filterable
             } elseif ((! request()->has($value['between'][0]) || is_null(request($value['between'][0]))) && (request()->has($value['between'][1]) && ! is_null(request($value['between'][1])))) {
                 $this->setPropertiesByType('second', $key, $value);
             }
-            $this->applyClause($query);
+            $this->applyClause();
         }
     }
 
-    private function applyClause($query)
+    private function applyClause()
     {
         switch ($this->clause) {
             case 'where':
-                $query->{$this->clause}($this->column, $this->operator, $this->value);
+                $this->filterableQuery->{$this->clause}($this->column, $this->operator, $this->value);
                 break;
             case 'whereBetween':
                 if (count((array) $this->value) == 2) {
-                    $query->{$this->clause}($this->column, $this->value);
+                    $this->filterableQuery->{$this->clause}($this->column, $this->value);
                 }
                 break;
         }
