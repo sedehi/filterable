@@ -3,6 +3,7 @@
 namespace Sedehi\Filterable;
 
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Morilog\Jalali\CalendarUtils;
 use Morilog\Jalali\Jalalian;
 
@@ -51,7 +52,7 @@ trait Filterable
     private function applyTrashedFilter($query)
     {
         if (request()->has('trashed') && ! is_null(request('trashed'))) {
-            if (in_array('Illuminate\Database\Eloquent\SoftDeletes', class_uses($this))) {
+            if (in_array(SoftDeletes::class, class_uses($this))) {
                 if (in_array(request('trashed'), ['with', 'only'])) {
                     $query->{request('trashed').'Trashed'}();
                 }
@@ -61,21 +62,28 @@ trait Filterable
 
     private function applyClauseEqual($query, $value)
     {
-        $this->column = $value;
-        $this->value = request()->get($value);
-        $this->operator = '=';
-        $this->applyClause($query);
+        $scopeClass = $this->scope('where');
+        $query->tap(function ($query) use ($value, $scopeClass) {
+            (new $scopeClass)->apply($query, $query->getModel(), $value, '=', request()->get($value));
+        });
+    }
+
+    private function scope($name)
+    {
+        return config('filterable.scopes.'.$name);
     }
 
     private function applyClauseOperator($query, $key, $value)
     {
-        $this->column = $key;
-        $this->value = request()->get($key);
-        $this->operator = strtoupper($value['operator']);
-        if ($this->operator === 'LIKE') {
-            $this->value = '%'.$this->value.'%';
-        }
-        $this->applyClause($query);
+        $scopeClass = $this->scope('where');
+        $query->tap(function ($query) use ($value, $key, $scopeClass) {
+            $operator = strtoupper($value['operator']);
+            $value = request()->get($key);
+            if ($operator === 'LIKE') {
+                $value = '%'.$value.'%';
+            }
+            (new $scopeClass)->apply($query, $query->getModel(), $key, $operator, $value);
+        });
     }
 
     private function applyClauseScope($query, $value)

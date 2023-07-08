@@ -11,5 +11,8 @@ return [
     ],
     'date_divider' => '-',
     'date_format' => 'y-m-d-h-i-s',
+    'scopes' => [
+        'where' => \Sedehi\Filterable\Scopes\WhereScope::class,
+    ],
 
 ];
