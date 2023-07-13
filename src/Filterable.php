@@ -3,22 +3,12 @@
 namespace Sedehi\Filterable;
 
 use Carbon\Carbon;
-use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Arr;
 use Morilog\Jalali\CalendarUtils;
 use Morilog\Jalali\Jalalian;
 
 trait Filterable
 {
-    private $operator = '=';
-
-    private $clause = 'where';
-
-    private $append = false;
-
-    private $column;
-
-    private $value;
-
     private $filterableQuery;
 
     public function scopeFilter($query, array $filter = null)
@@ -29,147 +19,135 @@ trait Filterable
         if (is_null($this->filterable)) {
             return $query;
         }
-        $this->filterableQuery = $query;
-        if (count(request()->except('page'))) {
-            $this->applyTrashedFilter();
-            foreach ($this->filterable as $key => $value) {
-                if (is_numeric($key) && (request()->has($value) && ! is_null(request($value)))) {
-                    $this->applyClauseEqual($value);
-                } elseif (is_array($value)) {
-                    if (isset($value['operator']) && (request()->has($key) && ! is_null(request($key)))) {
-                        $this->applyClauseOperator($key, $value);
-                    }
-                    if (isset($value['scope']) && (request()->has($key) && ! is_null(request($key)))) {
-                        $this->applyClauseScope($value);
-                    }
-                    if (isset($value['between'])) {
-                        $this->applyClauseBetween($key, $value);
-                    }
-                }
-                $this->column = null;
-                $this->value = null;
-            }
-        }
-    }
 
-    private function applyTrashedFilter()
-    {
-        if (request()->has('trashed') && ! is_null(request('trashed'))) {
-            if (in_array(SoftDeletes::class, class_uses($this))) {
-                if (in_array(request('trashed'), ['with', 'only'])) {
-                    $this->filterableQuery->{request('trashed').'Trashed'}();
-                }
-            }
-        }
-    }
-
-    private function applyClauseEqual($value)
-    {
-        $scopeClass = $this->scope('where');
-        $this->filterableQuery->tap(function ($query) use ($value, $scopeClass) {
-            (new $scopeClass)->apply($query, $query->getModel(), $value, '=', request()->get($value));
-        });
-    }
-
-    private function scope($name)
-    {
-        return config('filterable.scopes.'.$name);
-    }
-
-    private function applyClauseOperator($key, $value)
-    {
-        $scopeClass = $this->scope('where');
-        $this->filterableQuery->tap(function ($query) use ($value, $key, $scopeClass) {
-            $operator = strtoupper($value['operator']);
-            $value = request()->get($key);
-            if ($operator === 'LIKE') {
-                $value = '%'.$value.'%';
-            }
-            (new $scopeClass)->apply($query, $query->getModel(), $key, $operator, $value);
-        });
-    }
-
-    private function applyClauseScope($value)
-    {
-        if (is_array($value['scope'])) {
-            foreach ($value['scope'] as $scope) {
-                $this->filterableQuery->{$scope}();
-            }
-        } else {
-            $this->filterableQuery->{$value['scope']}();
-        }
-    }
-
-    private function applyClauseBetween($key, $value)
-    {
-        if (is_array($value['between'])) {
-            $this->clause = 'whereBetween';
-            $this->column = $key;
-            if ((request()->has($value['between'][0]) && ! is_null(request($value['between'][0]))) && (request()->has($value['between'][1]) && ! is_null(request($value['between'][1])))) {
-                $this->setPropertiesByType('both', $key, $value);
-            } elseif ((request()->has($value['between'][0]) && ! is_null(request($value['between'][0]))) && (! request()->has($value['between'][1]) || is_null(request($value['between'][1])))) {
-                $this->setPropertiesByType('first', $key, $value);
-            } elseif ((! request()->has($value['between'][0]) || is_null(request($value['between'][0]))) && (request()->has($value['between'][1]) && ! is_null(request($value['between'][1])))) {
-                $this->setPropertiesByType('second', $key, $value);
-            }
-            $this->applyClause();
-        }
-    }
-
-    private function applyClause()
-    {
-        switch ($this->clause) {
-            case 'where':
-                $this->filterableQuery->{$this->clause}($this->column, $this->operator, $this->value);
-                break;
-            case 'whereBetween':
-                if (count((array) $this->value) == 2) {
-                    $this->filterableQuery->{$this->clause}($this->column, $this->value);
-                }
-                break;
-        }
-    }
-
-    private function setPropertiesByType($type, $key, $value)
-    {
         $casts = collect($this->casts);
         $dates = $casts->filter(function ($value) {
             return $value === 'datetime';
         })->merge(array_flip($this->getDates() + (array) $this->dates))->keys()->toArray();
         $dates = array_unique(array_merge(config('filterable.date_fields'), $dates));
-        switch ($type) {
-            case 'both':
-                if (in_array($key, $dates)) {
-                    $this->value = [
-                        $this->convertDate(request($value['between'][0])),
-                        $this->convertDate(request($value['between'][1]), true),
-                    ];
-                } else {
-                    $this->value = [
-                        request($value['between'][0]),
-                        request($value['between'][1]),
-                    ];
+
+        $this->filterableQuery = $query;
+        if (count(request()->except('page'))) {
+            foreach ($this->filterable as $filterkey => $filterValue) {
+                $scope = $this->getScope($filterkey, $filterValue);
+                $operator = $this->getOperator($filterkey, $filterValue);
+                $value = $this->getValue($filterkey, $filterValue, $dates, $scope, $operator);
+                $column = $this->getColumn($filterkey, $filterValue);
+
+                if ($value === null) {
+                    continue;
                 }
-                break;
-            case 'first':
-                $this->clause = 'where';
-                $this->operator = '>=';
-                if (in_array($key, $dates)) {
-                    $this->value = $this->convertDate(request($value['between'][0]));
-                } else {
-                    $this->value = request($value['between'][0]);
+                if (class_exists($scope)) {
+                    $this->filterableQuery->tap(function ($query) use ($value, $scope, $operator, $column) {
+                        (new $scope)->apply($query, $query->getModel(), $column, $operator, $value);
+                    });
+                } elseif ($scope) {
+                    if (in_array($scope, ['wherebetween', 'wherein'])) {
+                        $this->filterableQuery->tap(function ($query) use ($value, $scope, $column) {
+                            $query->{$scope}($column, $value);
+                        });
+                    } else {
+                        $this->filterableQuery->tap(function ($query) use ($value, $scope, $operator, $column) {
+                            $query->{$scope}($column, $operator, $value);
+                        });
+                    }
+
                 }
-                break;
-            case 'second':
-                $this->clause = 'where';
-                $this->operator = '<=';
-                if (in_array($key, $dates)) {
-                    $this->value = $this->convertDate(request($value['between'][1]), true);
-                } else {
-                    $this->value = request($value['between'][1]);
-                }
-                break;
+            }
         }
+    }
+
+    private function getValue($filterkey, $filterValue, $dates, &$scope, &$operator)
+    {
+        $operator = strtoupper($this->getOperator($filterkey, $filterValue));
+        $param = is_numeric($filterkey) ? $filterValue : $filterkey;
+        if ($scope == 'wherebetween') {
+            $params = Arr::flatten($filterValue);
+            $firstParam = head($params);
+            $secondParam = end($params);
+            if (request()->filled($firstParam) && request()->filled($secondParam)) {
+                if (in_array($param, $dates)) {
+                    return [
+                        $this->convertDate(request($firstParam)),
+                        $this->convertDate(request($secondParam), true),
+                    ];
+                } else {
+                    return [
+                        request($firstParam),
+                        request($secondParam),
+                    ];
+                }
+            } elseif (request()->filled($firstParam) && request()->isNotFilled($firstParam)) {
+                $scope = 'where';
+                $operator = '>=';
+                if (in_array($param, $dates)) {
+                    return $this->convertDate(request($firstParam));
+                } else {
+                    return request($firstParam);
+                }
+            } elseif (request()->isNotFilled($firstParam) && request()->filled($secondParam)) {
+                $scope = 'where';
+                $operator = '<=';
+                if (in_array($param, $dates)) {
+                    return $this->convertDate(request($secondParam), true);
+                } else {
+                    return request($secondParam);
+                }
+            }
+        }
+        if (request()->filled($param)) {
+            $value = request()->get($param);
+            if ($operator === 'LIKE') {
+                $value = '%'.$value.'%';
+            }
+
+            return $value;
+        }
+
+        return null;
+    }
+
+    private function getOperator($key, $value): string
+    {
+        if (is_array($value)) {
+            return isset($value['operator']) ? $value['operator'] : '=';
+        }
+
+        return '=';
+    }
+
+    private function getScope($key, $value): ?string
+    {
+
+        if (is_numeric($key)) {
+            return 'where';
+        } elseif (is_array($value)) {
+            $query = Arr::except($value, ['scope', 'operator', 'column']);
+            if (isset($value['scope'])) {
+                return $value['scope'];
+            } elseif ($query) {
+                return 'where'.key($query);
+            } else {
+                return 'where';
+            }
+        }
+
+        return null;
+    }
+
+    private function getColumn($key, $value): string
+    {
+        if (is_numeric($key)) {
+            return $value;
+        } elseif (is_array($value)) {
+            if (isset($value['column'])) {
+                return $value['column'];
+            }
+
+            return $key;
+        }
+
+        throw new Exception('column');
     }
 
     private function convertDate($date, $last = false)

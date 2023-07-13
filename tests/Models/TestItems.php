@@ -5,6 +5,7 @@ namespace Sedehi\Filterable\Test\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Sedehi\Filterable\Filterable;
+use Sedehi\Filterable\Scopes\TrashedScope;
 
 class TestItems extends Model
 {
@@ -25,6 +26,13 @@ class TestItems extends Model
                 'start_created',
                 'end_created',
             ],
+        ],
+        'trashed' => [
+            'column' => 'deleted_at',
+            'scope' => TrashedScope::class,
+        ],
+        'custom_column' => [
+            'column' => 'title',
         ],
     ];
 
