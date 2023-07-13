@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "f2b63b642ef64c96b51f2aabd424c857",
+    "content-hash": "6145a8e54cb9df46b4a2f91fd59916fb",
     "packages": [
         {
             "name": "brick/math",
@@ -761,16 +761,16 @@
         },
         {
             "name": "hekmatinasser/verta",
-            "version": "v8.3",
+            "version": "v8.3.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/hekmatinasser/verta.git",
-                "reference": "55c342a6b37280cc4eceeb382a217471cb23bff3"
+                "reference": "5ef147733289845d14786e1418c0c0ab5f85b7fc"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/hekmatinasser/verta/zipball/55c342a6b37280cc4eceeb382a217471cb23bff3",
-                "reference": "55c342a6b37280cc4eceeb382a217471cb23bff3",
+                "url": "https://api.github.com/repos/hekmatinasser/verta/zipball/5ef147733289845d14786e1418c0c0ab5f85b7fc",
+                "reference": "5ef147733289845d14786e1418c0c0ab5f85b7fc",
                 "shasum": ""
             },
             "require": {
@@ -822,7 +822,7 @@
             ],
             "support": {
                 "issues": "https://github.com/hekmatinasser/verta/issues",
-                "source": "https://github.com/hekmatinasser/verta/tree/v8.3"
+                "source": "https://github.com/hekmatinasser/verta/tree/v8.3.2"
             },
             "funding": [
                 {
@@ -830,7 +830,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2023-02-17T14:31:41+00:00"
+            "time": "2023-05-15T11:52:55+00:00"
         },
         {
             "name": "laravel/framework",
