@@ -3,8 +3,8 @@
 namespace Sedehi\Filterable;
 
 use Carbon\Carbon;
+use Hekmatinasser\Verta\Verta;
 use Illuminate\Support\Arr;
-use Morilog\Jalali\CalendarUtils;
 use Morilog\Jalali\Jalalian;
 
 trait Filterable
@@ -152,27 +152,37 @@ trait Filterable
 
     private function convertDate($date, $last = false)
     {
-        $date = CalendarUtils::convertNumbers($date, true);
+        $date = $this->convertToEng($date);
         $dateTime = [];
         $dateTime[3] = ($last) ? '23' : '0';
         $dateTime[4] = ($last) ? '59' : '0';
         $dateTime[5] = ($last) ? '59' : '0';
         $dateTime = array_merge(explode(config('filterable.date_divider'), $date), $dateTime);
+
         $formats = ['d' => 0, 'm' => 1, 'y' => 2, 'h' => 3, 'i' => 4, 's' => 5];
         if (count($dateTime) == 6) {
             if (! is_null(config('filterable.date_format'))) {
                 $formats = array_flip(explode(config('filterable.date_divider'), config('filterable.date_format')));
             }
             if (config('filterable.date_type') == 'jalali') {
-                $timestamp = (new Jalalian($dateTime[$formats['y']], $dateTime[$formats['m']], $dateTime[$formats['d']], $dateTime[$formats['h']], $dateTime[$formats['i']], $dateTime[$formats['s']]))->getTimestamp();
+                $timestamp =  Verta::createJalali($dateTime[$formats['y']], $dateTime[$formats['m']], $dateTime[$formats['d']], $dateTime[$formats['h']], $dateTime[$formats['i']], $dateTime[$formats['s']])->toCarbon();
             } else {
-                $timestamp = Carbon::create($dateTime[$formats['y']], $dateTime[$formats['m']], $dateTime[$formats['d']], $dateTime[$formats['h']], $dateTime[$formats['i']], $dateTime[$formats['s']])
-                    ->getTimestamp();
+                $timestamp = Carbon::create($dateTime[$formats['y']], $dateTime[$formats['m']], $dateTime[$formats['d']], $dateTime[$formats['h']], $dateTime[$formats['i']], $dateTime[$formats['s']]);
             }
 
-            return date($this->getDateFormat(), $timestamp);
+            return $timestamp;
         }
 
         return false;
+    }
+
+    protected function convertToEng(string $string) :string
+    {
+        $persian = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
+        $arabic = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+
+        $num = range(0, 9);
+        $convertedPersianNums = str_replace($persian, $num, $string);
+        return str_replace($arabic, $num, $convertedPersianNums);
     }
 }
