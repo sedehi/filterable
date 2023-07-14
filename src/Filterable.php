@@ -11,6 +11,12 @@ trait Filterable
 {
     private $filterableQuery;
 
+    /**
+     * Apply filters to the query.
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder  $query
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
     public function scopeFilter($query, array $filter = null)
     {
         if (! is_null($filter)) {
@@ -20,23 +26,21 @@ trait Filterable
             return $query;
         }
 
-        $casts = collect($this->casts);
-        $dates = $casts->filter(function ($value) {
-            return $value === 'datetime';
-        })->merge(array_flip($this->getDates() + (array) $this->dates))->keys()->toArray();
-        $dates = array_unique(array_merge(config('filterable.date_fields'), $dates));
+        $dates = array_unique(array_merge(config('filterable.date_fields'), $this->getFilterableDates()));
 
         $this->filterableQuery = $query;
-        if (count(request()->except('page'))) {
-            foreach ($this->filterable as $filterkey => $filterValue) {
-                $scope = $this->getScope($filterkey, $filterValue);
-                $operator = $this->getOperator($filterkey, $filterValue);
-                $value = $this->getValue($filterkey, $filterValue, $dates, $scope, $operator);
-                $column = $this->getColumn($filterkey, $filterValue);
+        $requestData = request()->except('page');
+        if (count($requestData)) {
+            foreach ($this->filterable as $filterKey => $filterValue) {
+                $scope = $this->getScope($filterKey, $filterValue);
+                $operator = $this->getOperator($filterKey, $filterValue);
+                $value = $this->getValue($filterKey, $filterValue, $dates, $scope, $operator);
+                $column = $this->getColumn($filterKey, $filterValue);
 
                 if ($value === null) {
                     continue;
                 }
+
                 if (class_exists($scope)) {
                     $this->filterableQuery->tap(function ($query) use ($value, $scope, $operator, $column) {
                         (new $scope)->apply($query, $query->getModel(), $column, $operator, $value);
@@ -51,16 +55,42 @@ trait Filterable
                             $query->{$scope}($column, $operator, $value);
                         });
                     }
-
                 }
             }
         }
+
+        return $this->filterableQuery;
     }
 
-    private function getValue($filterkey, $filterValue, $dates, &$scope, &$operator)
+    /**
+     * Get the filterable date fields.
+     *
+     * @return array
+     */
+    private function getFilterableDates()
     {
-        $operator = strtoupper($this->getOperator($filterkey, $filterValue));
-        $param = is_numeric($filterkey) ? $filterValue : $filterkey;
+        $casts = collect($this->casts);
+        $dates = $casts->filter(function ($value) {
+            return $value === 'datetime';
+        })->merge(array_flip($this->getDates() + (array) $this->dates))->keys()->toArray();
+
+        return $dates;
+    }
+
+    /**
+     * Get the value for a filter key.
+     *
+     * @param  string|int  $filterKey
+     * @param  mixed  $filterValue
+     * @param  array  $dates
+     * @param  string  $scope
+     * @param  string  $operator
+     * @return mixed|null
+     */
+    private function getValue($filterKey, $filterValue, $dates, &$scope, &$operator)
+    {
+        $operator = strtoupper($this->getOperator($filterKey, $filterValue));
+        $param = is_numeric($filterKey) ? $filterValue : $filterKey;
         if ($scope == 'wherebetween') {
             $params = Arr::flatten($filterValue);
             $firstParam = head($params);
@@ -107,6 +137,12 @@ trait Filterable
         return null;
     }
 
+    /**
+     * Get the operator for a filter key.
+     *
+     * @param  string|int  $key
+     * @param  mixed  $value
+     */
     private function getOperator($key, $value): string
     {
         if (is_array($value)) {
@@ -116,9 +152,14 @@ trait Filterable
         return '=';
     }
 
+    /**
+     * Get the scope for a filter key.
+     *
+     * @param  string|int  $key
+     * @param  mixed  $value
+     */
     private function getScope($key, $value): ?string
     {
-
         if (is_numeric($key)) {
             return 'where';
         } elseif (is_array($value)) {
@@ -135,6 +176,14 @@ trait Filterable
         return null;
     }
 
+    /**
+     * Get the column for a filter key.
+     *
+     * @param  string|int  $key
+     * @param  mixed  $value
+     *
+     * @throws \Exception
+     */
     private function getColumn($key, $value): string
     {
         if (is_numeric($key)) {
@@ -150,6 +199,13 @@ trait Filterable
         throw new Exception('column not set');
     }
 
+    /**
+     * Convert a date to the appropriate format.
+     *
+     * @param  string  $date
+     * @param  bool  $last
+     * @return bool|\Carbon\Carbon|\Hekmatinasser\Verta\Verta
+     */
     private function convertDate($date, $last = false)
     {
         $date = $this->convertToEng($date);
@@ -165,9 +221,23 @@ trait Filterable
                 $formats = array_flip(explode(config('filterable.date_divider'), config('filterable.date_format')));
             }
             if (config('filterable.date_type') == 'jalali') {
-                $timestamp = Verta::createJalali($dateTime[$formats['y']], $dateTime[$formats['m']], $dateTime[$formats['d']], $dateTime[$formats['h']], $dateTime[$formats['i']], $dateTime[$formats['s']])->toCarbon();
+                $timestamp = Verta::createJalali(
+                    $dateTime[$formats['y']],
+                    $dateTime[$formats['m']],
+                    $dateTime[$formats['d']],
+                    $dateTime[$formats['h']],
+                    $dateTime[$formats['i']],
+                    $dateTime[$formats['s']]
+                )->toCarbon();
             } else {
-                $timestamp = Carbon::create($dateTime[$formats['y']], $dateTime[$formats['m']], $dateTime[$formats['d']], $dateTime[$formats['h']], $dateTime[$formats['i']], $dateTime[$formats['s']]);
+                $timestamp = Carbon::create(
+                    $dateTime[$formats['y']],
+                    $dateTime[$formats['m']],
+                    $dateTime[$formats['d']],
+                    $dateTime[$formats['h']],
+                    $dateTime[$formats['i']],
+                    $dateTime[$formats['s']]
+                );
             }
 
             return $timestamp;
@@ -176,6 +246,9 @@ trait Filterable
         return false;
     }
 
+    /**
+     * Convert Persian or Arabic numerals to English numerals.
+     */
     protected function convertToEng(string $string): string
     {
         $persian = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
