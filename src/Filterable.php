@@ -9,7 +9,6 @@ use Illuminate\Support\Arr;
 
 trait Filterable
 {
-
     private $filterableQuery;
 
     public function scopeFilter($query, array $filter = null)
@@ -166,7 +165,7 @@ trait Filterable
                 $formats = array_flip(explode(config('filterable.date_divider'), config('filterable.date_format')));
             }
             if (config('filterable.date_type') == 'jalali') {
-                $timestamp =  Verta::createJalali($dateTime[$formats['y']], $dateTime[$formats['m']], $dateTime[$formats['d']], $dateTime[$formats['h']], $dateTime[$formats['i']], $dateTime[$formats['s']])->toCarbon();
+                $timestamp = Verta::createJalali($dateTime[$formats['y']], $dateTime[$formats['m']], $dateTime[$formats['d']], $dateTime[$formats['h']], $dateTime[$formats['i']], $dateTime[$formats['s']])->toCarbon();
             } else {
                 $timestamp = Carbon::create($dateTime[$formats['y']], $dateTime[$formats['m']], $dateTime[$formats['d']], $dateTime[$formats['h']], $dateTime[$formats['i']], $dateTime[$formats['s']]);
             }
@@ -177,13 +176,14 @@ trait Filterable
         return false;
     }
 
-    protected function convertToEng(string $string) :string
+    protected function convertToEng(string $string): string
     {
         $persian = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
         $arabic = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
 
         $num = range(0, 9);
         $convertedPersianNums = str_replace($persian, $num, $string);
+
         return str_replace($arabic, $num, $convertedPersianNums);
     }
 }
