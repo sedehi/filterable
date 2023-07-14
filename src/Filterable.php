@@ -206,7 +206,7 @@ trait Filterable
      * @param  bool  $last
      * @return bool|\Carbon\Carbon|\Hekmatinasser\Verta\Verta
      */
-    private function convertDate($date, $last = false)
+    private function convertDate(string $date, $last = false)
     {
         $date = $this->convertToEng($date);
         $dateTime = [];

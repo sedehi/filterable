@@ -1,6 +1,6 @@
 # Laravel Filterable 
 [![Latest Stable Version](https://poser.pugx.org/sedehi/filterable/v/stable)](https://packagist.org/packages/sedehi/filterable) 
-[![Total Downloads](https://poser.pugx.org/sedehi/filterable/downloads)](https://packagist.org/packages/sedehi/filterable) 
+![Packagist Downloads (custom server)](https://img.shields.io/packagist/dm/sedehi/filterable)
 [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/sedehi/filterable/run-tests.yml?branch=v3&label=Tests)](https://github.com/sedehi/filterable/actions/workflows/run-tests.yml)
 
 
