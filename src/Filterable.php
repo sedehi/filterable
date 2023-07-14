@@ -10,7 +10,6 @@ use Illuminate\Support\Arr;
 trait Filterable
 {
 
-    protected $filterable = [];
     private $filterableQuery;
 
     public function scopeFilter($query, array $filter = null)
