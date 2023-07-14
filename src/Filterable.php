@@ -3,12 +3,14 @@
 namespace Sedehi\Filterable;
 
 use Carbon\Carbon;
+use Exception;
 use Hekmatinasser\Verta\Verta;
 use Illuminate\Support\Arr;
-use Morilog\Jalali\Jalalian;
 
 trait Filterable
 {
+
+    protected $filterable = [];
     private $filterableQuery;
 
     public function scopeFilter($query, array $filter = null)
@@ -147,7 +149,7 @@ trait Filterable
             return $key;
         }
 
-        throw new Exception('column');
+        throw new Exception('column not set');
     }
 
     private function convertDate($date, $last = false)
